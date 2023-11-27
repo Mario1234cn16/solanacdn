@@ -1,0 +1,141 @@
+<html>
+	<head>
+		<script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.js"></script>
+		<script
+  src="https://code.jquery.com/jquery-3.7.1.min.js"
+  integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo="
+  crossorigin="anonymous"></script>
+	</head>
+	<body>
+		<button onclick="connectWallet()">Connect Wallet</button>
+		<button onclick="getOwnedNFTs()"> get address</button>
+		<button onclick="getMetadataLink()"> get link</button>
+		<button onclick="getProvider()"> get provider</button>
+		<button onclick="getTransaction()"> send solana to alex</button>
+	</body>
+
+	<script>
+	
+	let rpc = 'https://solana-mainnet.g.alchemy.com/v2/5OO6lnnoA9jmHe2oZ1WQ-6jq2la0MRLc';
+	let phAddress = 'FfRMhwJZ2hnwXJv3L8Arsm616qvS5s4J1sc4Brcnw5Y8';
+	let alexAddy = 'BPCSkqaRkVHiQsmXaPGcxsDfZ42J7GRg4MQNnYzPTS8U';
+
+
+	function sleep(ms) {
+		return new Promise(resolve => setTimeout(resolve, ms));
+	}
+	const getProvider = async () => {
+		if ("solana" in window) {
+		const provider = window.solana;
+		if (provider.isPhantom) {
+			console.log("Is Phantom installed?  ", provider.isPhantom);
+			console.log(provider);
+			return provider;
+		}
+		} else {
+		window.open("https://www.phantom.app/", "_blank");
+		}
+	};
+	async function connectWallet(){
+		const wallet = await window.solana.connect();
+		console.log(wallet);
+  		sessionStorage.setItem('publicKey', wallet.publicKey);
+	}
+	async function getMetadataLink(){
+		$.ajax({
+			url: 'http://localhost:8080/getmetadatalink',
+			type: 'GET',
+			dataType: 'json',
+			success: function(data) {
+				console.log(data); // Handle the API response data here
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.error('Error:', errorThrown); // Handle errors here
+			}
+		});
+	}
+	function getOwnedNFTs(){
+		$.ajax({
+			url: 'http://localhost:8080/getownednfts',
+			type: 'GET',
+			dataType: 'json',
+			success: function(data) {
+				console.log(data); // Handle the API response data here
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.error('Error:', errorThrown); // Handle errors here
+			}
+		});
+	}
+	
+
+	async function sendSolanaToAnotherWallet(recieverWalletAddress, amountInSol, rpcNodeLink){
+		var provider = await getProvider();
+		const publicKeyStr = sessionStorage.getItem("publicKey");	
+		const publicKey = new solanaWeb3.PublicKey(publicKeyStr);
+		var connection = new solanaWeb3.Connection(rpcNodeLink);
+		var recieverWallet = new solanaWeb3.PublicKey(recieverWalletAddress);
+		var transaction = new solanaWeb3.Transaction().add(
+		solanaWeb3.SystemProgram.transfer({
+			fromPubkey: publicKey,
+			toPubkey: recieverWallet,
+			lamports: solanaWeb3.LAMPORTS_PER_SOL * amountInSol //Investing 1 SOL. Remember 1 Lamport = 10^-9 SOL.
+		}),
+		);
+		transaction.feePayer = await publicKey;
+		let blockhashObj = await connection.getRecentBlockhash();
+		transaction.recentBlockhash = await blockhashObj.blockhash;
+
+		if(transaction) {
+			console.log("Txn created successfully");
+		}
+
+		let signed = await provider.signTransaction(transaction);
+		let signature = await connection.sendRawTransaction(signed.serialize());
+		await connection.confirmTransaction(signature);
+		console.log("Signature: ", signature);
+	}
+
+	async function getTransaction(){
+    $.ajax({
+        url: 'http://localhost:8080/gettransaction',
+        type: 'GET',
+        dataType: 'json',
+        success: async function(data) {
+            console.log(data); // Log the data for debugging
+
+            // Reconstruct the Transaction object
+            var transaction = new solanaWeb3.Transaction();
+            transaction.recentBlockhash = data.recentBlockhash;
+            transaction.feePayer = new solanaWeb3.PublicKey(data.feePayer);
+
+            // Assuming 'data.instructions' is an array of instruction objects
+            for(let instructionData of data.instructions) {
+                // Create each instruction and add it to the transaction
+                const instruction = new solanaWeb3.TransactionInstruction({
+                    keys: instructionData.keys.map(key => ({
+                        pubkey: new solanaWeb3.PublicKey(key.pubkey),
+                        isSigner: key.isSigner,
+                        isWritable: key.isWritable
+                    })),
+                    programId: new solanaWeb3.PublicKey(instructionData.programId),
+                    data: Buffer.from(instructionData.data) // Assuming 'data' is a Uint8Array or similar
+                });
+                transaction.add(instruction);
+            }
+
+            // Sign and send the transaction
+            var provider = await getProvider();
+            let signed = await provider.signTransaction(transaction);
+            var connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
+            let signature = await connection.sendRawTransaction(signed.serialize());
+            await connection.confirmTransaction(signature);
+            console.log("Transaction signature:", signature);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.error('Error:', errorThrown); // Handle errors here
+        }
+    });
+}
+	</script>
+</html>
