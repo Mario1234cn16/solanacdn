@@ -103,28 +103,12 @@
         success: async function(data) {
             console.log(data); // Log the data for debugging
 
-            // Reconstruct the Transaction object
-            var transaction = new solanaWeb3.Transaction();
-            transaction.recentBlockhash = data.recentBlockhash;
-            transaction.feePayer = new solanaWeb3.PublicKey(data.feePayer);
-
-            // Assuming 'data.instructions' is an array of instruction objects
-            for(let instructionData of data.instructions) {
-                // Create each instruction and add it to the transaction
-                const instruction = new solanaWeb3.TransactionInstruction({
-                    keys: instructionData.keys.map(key => ({
-                        pubkey: new solanaWeb3.PublicKey(key.pubkey),
-                        isSigner: key.isSigner,
-                        isWritable: key.isWritable
-                    })),
-                    programId: new solanaWeb3.PublicKey(instructionData.programId),
-                    data: Buffer.from(instructionData.data) // Assuming 'data' is a Uint8Array or similar
-                });
-                transaction.add(instruction);
-            }
+            // Deserialize the Transaction object
+            var transaction = solanaWeb3.Transaction.from(data);
 
             // Sign and send the transaction
             var provider = await getProvider();
+            if (!provider) return; // Ensure provider is available
             let signed = await provider.signTransaction(transaction);
             var connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
             let signature = await connection.sendRawTransaction(signed.serialize());
