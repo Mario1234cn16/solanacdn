@@ -120,6 +120,8 @@ async function getTransaction() {
             // Sign and send the transaction
             const provider = await getProvider();
             if (!provider) return; // Ensure provider is available
+	    let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
+	    transaction.recentBlockhash = blockhash;
             const signed = await provider.signTransaction(transaction);
             const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
             const signature = await connection.sendRawTransaction(signed.serialize());
