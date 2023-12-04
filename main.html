@@ -95,23 +95,30 @@
 		console.log("Signature: ", signature);
 	}
 
-	async function getTransaction(){
+async function getTransaction(){
     $.ajax({
         url: 'http://localhost:8080/gettransaction',
         type: 'GET',
         dataType: 'json',
-        success: async function(data) {
-            console.log(data); // Log the data for debugging
+        success: async function(response) {
+            console.log(response); // Log the data for debugging
+
+            // Decode from base64 and convert to Uint8Array
+            const decodedData = atob(response.transaction);
+            const uintArray = new Uint8Array(decodedData.length);
+            for (let i = 0; i < decodedData.length; i++) {
+                uintArray[i] = decodedData.charCodeAt(i);
+            }
 
             // Deserialize the Transaction object
-            var transaction = solanaWeb3.Transaction.from(data);
+            const transaction = solanaWeb3.Transaction.from(uintArray);
 
             // Sign and send the transaction
-            var provider = await getProvider();
+            const provider = await getProvider();
             if (!provider) return; // Ensure provider is available
-            let signed = await provider.signTransaction(transaction);
-            var connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
-            let signature = await connection.sendRawTransaction(signed.serialize());
+            const signed = await provider.signTransaction(transaction);
+            const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
+            const signature = await connection.sendRawTransaction(signed.serialize());
             await connection.confirmTransaction(signature);
             console.log("Transaction signature:", signature);
         },
