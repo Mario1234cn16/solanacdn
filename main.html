@@ -106,24 +106,18 @@ async function getTransaction() {
 	    const pubKeyStr = 'AtMQygNEtcGwyFEWi9KwZSPWJxzw3EopXTJGC3Cj4chY';
 	    const publicKey = new solanaWeb3.PublicKey(pubKeyStr);
             // Decode from base64 and convert to Uint8Array
-            //const decodedData = atob(response.transaction);
-            //const uintArray = new Uint8Array(decodedData.length);
-            //for (let i = 0; i < decodedData.length; i++) {
-            //    uintArray[i] = decodedData.charCodeAt(i);
-            //}
+            const decodedData = atob(response.transaction);
+            const uintArray = new Uint8Array(decodedData.length);
+            for (let i = 0; i < decodedData.length; i++) {
+                uintArray[i] = decodedData.charCodeAt(i);
+            }
 
             // Deserialize the Versioned Message
-            //const versionedMessage = solanaWeb3.VersionedMessage.deserialize(uintArray);
+            const versionedMessage = solanaWeb3.VersionedMessage.deserialize(uintArray);
             const decodedData = atob(response.transaction);
-const uintArray = new Uint8Array(decodedData.length);
-for (let i = 0; i < decodedData.length; i++) {
-    uintArray[i] = decodedData.charCodeAt(i);
-}
-
-const transaction = solanaWeb3.Transaction.from(uintArray);
             // Create a Transaction object from the Versioned Message
-            //const transaction = new solanaWeb3.Transaction();
-            //transaction.add(versionedMessage);
+            const transaction = new solanaWeb3.Transaction();
+            transaction.add(versionedMessage.message.instructions[0]); // This assumes a single instruction; adjust as needed
 
             // Sign and send the transaction
             const provider = await getProvider();
