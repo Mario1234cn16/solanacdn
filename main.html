@@ -122,8 +122,8 @@ for (let i = 0; i < decodedData.length; i++) {
 
 const transaction = solanaWeb3.Transaction.from(uintArray);
             // Create a Transaction object from the Versioned Message
-            const transaction = new solanaWeb3.Transaction();
-            transaction.add(versionedMessage);
+            //const transaction = new solanaWeb3.Transaction();
+            //transaction.add(versionedMessage);
 
             // Sign and send the transaction
             const provider = await getProvider();
