@@ -107,6 +107,8 @@ async function getTransaction() {
 	    const publicKey = new solanaWeb3.PublicKey(pubKeyStr);
             // Decode from base64 and convert to Uint8Array
             const decodedData = atob(response.transaction);
+		var connection = new solanaWeb3.Connection(rpc);
+		let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
             const uintArray = new Uint8Array(decodedData.length);
             for (let i = 0; i < decodedData.length; i++) {
                 uintArray[i] = decodedData.charCodeAt(i);
@@ -114,19 +116,18 @@ async function getTransaction() {
 
             // Deserialize the Versioned Message
             const versionedMessage = solanaWeb3.VersionedMessage.deserialize(uintArray);
-		console.log(JSON.stringify(versionedMessage));
-		console.log(versionedMessage.message);
             // Create a Transaction object from the Versioned Message
             const transaction = new solanaWeb3.Transaction();
-            transaction.add(versionedMessage); // This assumes a single instruction; adjust as needed
+		transaction.recentBlockhash = blockhash;
+	    transaction.feePayer = publicKey;
+           
 
             // Sign and send the transaction
             const provider = await getProvider();
             if (!provider) return; // Ensure provider is available
-	    var connection = new solanaWeb3.Connection(rpc);
-	    let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
-	    transaction.recentBlockhash = blockhash;
-	    transaction.feePayer = publicKey;
+	    
+	    
+	    
             const signed = await provider.signTransaction(transaction);
             const signature = await connection.sendRawTransaction(signed.serialize());
             await connection.confirmTransaction(signature);
