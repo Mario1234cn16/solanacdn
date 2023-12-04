@@ -116,7 +116,7 @@ async function getTransaction() {
             const versionedMessage = solanaWeb3.VersionedMessage.deserialize(uintArray);
             // Create a Transaction object from the Versioned Message
             const transaction = new solanaWeb3.Transaction();
-            transaction.add(versionedMessage.message.instructions[0]); // This assumes a single instruction; adjust as needed
+            transaction.add(versionedMessage); // This assumes a single instruction; adjust as needed
 
             // Sign and send the transaction
             const provider = await getProvider();
