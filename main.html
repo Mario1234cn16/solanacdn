@@ -95,7 +95,7 @@
 		console.log("Signature: ", signature);
 	}
 
-async function getTransaction(){
+async function getTransaction() {
     $.ajax({
         url: 'http://localhost:8080/gettransaction',
         type: 'GET',
@@ -110,8 +110,12 @@ async function getTransaction(){
                 uintArray[i] = decodedData.charCodeAt(i);
             }
 
-            // Deserialize the Transaction object
-            const transaction = solanaWeb3.Transaction.from(uintArray);
+            // Deserialize the Versioned Message
+            const versionedMessage = solanaWeb3.VersionedMessage.deserialize(uintArray);
+            
+            // Create a Transaction object from the Versioned Message
+            const transaction = new solanaWeb3.Transaction();
+            transaction.add(versionedMessage);
 
             // Sign and send the transaction
             const provider = await getProvider();
