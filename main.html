@@ -120,7 +120,7 @@ async function getTransaction() {
             // Sign and send the transaction
             const provider = await getProvider();
             if (!provider) return; // Ensure provider is available
-	    const connection = new solanaWeb3.Connection(solanaWeb3.clusterApiUrl('mainnet-beta'));
+	    var connection = new solanaWeb3.Connection(rpcNodeLink);
 	    let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
 	    transaction.recentBlockhash = blockhash;
             const signed = await provider.signTransaction(transaction);
