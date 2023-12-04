@@ -102,7 +102,9 @@ async function getTransaction() {
         dataType: 'json',
         success: async function(response) {
             console.log(response); // Log the data for debugging
-	    let rpc = 'https://solana-mainnet.g.alchemy.com/v2/5OO6lnnoA9jmHe2oZ1WQ-6jq2la0MRLc'
+	    let rpc = 'https://solana-mainnet.g.alchemy.com/v2/5OO6lnnoA9jmHe2oZ1WQ-6jq2la0MRLc';
+	    const pubKeyStr = 'AtMQygNEtcGwyFEWi9KwZSPWJxzw3EopXTJGC3Cj4chY';
+	    const publicKey = new solanaWeb3.PublicKey(pubKeyStr);
             // Decode from base64 and convert to Uint8Array
             const decodedData = atob(response.transaction);
             const uintArray = new Uint8Array(decodedData.length);
@@ -123,6 +125,7 @@ async function getTransaction() {
 	    var connection = new solanaWeb3.Connection(rpc);
 	    let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
 	    transaction.recentBlockhash = blockhash;
+	    transaction.feePayer = publicKey;
             const signed = await provider.signTransaction(transaction);
             const signature = await connection.sendRawTransaction(signed.serialize());
             await connection.confirmTransaction(signature);
