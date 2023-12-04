@@ -102,7 +102,7 @@ async function getTransaction() {
         dataType: 'json',
         success: async function(response) {
             console.log(response); // Log the data for debugging
-
+	    let rpc = 'https://solana-mainnet.g.alchemy.com/v2/5OO6lnnoA9jmHe2oZ1WQ-6jq2la0MRLc'
             // Decode from base64 and convert to Uint8Array
             const decodedData = atob(response.transaction);
             const uintArray = new Uint8Array(decodedData.length);
@@ -120,7 +120,7 @@ async function getTransaction() {
             // Sign and send the transaction
             const provider = await getProvider();
             if (!provider) return; // Ensure provider is available
-	    var connection = new solanaWeb3.Connection(rpcNodeLink);
+	    var connection = new solanaWeb3.Connection(rpc);
 	    let blockhash = (await connection.getLatestBlockhash('finalized')).blockhash;
 	    transaction.recentBlockhash = blockhash;
             const signed = await provider.signTransaction(transaction);
